@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlexDriver</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">FlexDriver</div>
+    <div class="auth-sub">Gestión inteligente para repartidores</div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuth('login')">Iniciar sesión</div>
+      <div class="auth-tab" onclick="switchAuth('registro')">Registrarse</div>
+    </div>
+    <div id="auth-error" class="auth-error" style="display:none"></div>
+
+    <!-- LOGIN -->
+    <div id="form-login">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="login-email" placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input class="form-input" type="password" id="login-password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="login()">Entrar</button>
+    </div>
+
+    <!-- REGISTRO -->
+    <div id="form-registro" style="display:none">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Nombre</label>
+          <input class="form-input" type="text" id="reg-nombre" placeholder="Juan">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apellido</label>
+          <input class="form-input" type="text" id="reg-apellido" placeholder="Pérez">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="reg-email" placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input class="form-input" type="password" id="reg-password" placeholder="Mínimo 6 caracteres">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="registro()">Crear cuenta</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="app-screen" class="app" style="display:none">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-text">FlexDriver</div>
+      <div class="logo-sub">v1.0 MVP</div>
+    </div>
+    <span class="nav-section">Principal</span>
+    <div class="nav-item active" data-view="dashboard" onclick="navTo('dashboard',this)">
+      <i class="ti ti-layout-dashboard"></i> Dashboard
+    </div>
+    <div class="nav-item" data-view="bloques" onclick="navTo('bloques',this)">
+      <i class="ti ti-package"></i> Mis bloques
+    </div>
+    <div class="nav-item" data-view="ganancias" onclick="navTo('ganancias',this)">
+      <i class="ti ti-coin"></i> Ganancias
+    </div>
+    <div class="nav-item" data-view="tracker" onclick="navTo('tracker',this)">
+      <i class="ti ti-route"></i> Km & Gastos
+    </div>
+    <span class="nav-section">Cuenta</span>
+    <div class="nav-item" data-view="perfil" onclick="navTo('perfil',this)">
+      <i class="ti ti-user"></i> Perfil
+    </div>
+    <div class="nav-item" onclick="logout()" style="margin-top:auto">
+      <i class="ti ti-logout"></i> Cerrar sesión
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-right">
+        <div class="badge-week" id="badge-periodo"></div>
+        <div class="avatar" id="topbar-avatar">--</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD VIEW -->
+      <div class="view active" id="view-dashboard">
+        <div class="metrics-grid" id="dash-metrics"></div>
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Ingresos por semana</div>
+            </div>
+            <div class="card-body">
+              <div class="bar-chart" id="weekChart"></div>
+            </div>
+          </div>
+          <div class="net-card" id="dash-meta"></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Últimos bloques</div>
+              <button class="btn btn-ghost" onclick="navTo('bloques', document.querySelector('[data-view=bloques]'))">Ver todos</button>
+            </div>
+            <div class="card-body" id="dash-ultimos"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Resumen de gastos</div></div>
+            <div class="card-body" id="dash-gastos"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BLOQUES VIEW -->
+      <div class="view" id="view-bloques">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:gap">
+          <div class="tabs">
+            <div class="tab active" onclick="filtrarBloques('', this)">Todos</div>
+            <div class="tab" onclick="filtrarBloques('completado', this)">Completados</div>
+            <div class="tab" onclick="filtrarBloques('pendiente', this)">Pendientes</div>
+            <div class="tab" onclick="filtrarBloques('cancelado', this)">Cancelados</div>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModalBloque()"><i class="ti ti-plus"></i> Nuevo bloque</button>
+        </div>
+        <div class="card">
+          <div class="card-body p0" id="lista-bloques"><div class="empty-state">Cargando...</div></div>
+        </div>
+      </div>
+
+      <!-- GANANCIAS VIEW -->
+      <div class="view" id="view-ganancias">
+        <div class="grid-2" style="margin-bottom:20px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Calculadora de ganancia neta</div></div>
+            <div class="card-body">
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label">Ingresos brutos ($)</label>
+                  <input class="form-input" type="number" id="calc-ingreso" oninput="calcGanancia()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Combustible ($)</label>
+                  <input class="form-input" type="number" id="calc-combus" oninput="calcGanancia()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Mantenimiento ($)</label>
+                  <input class="form-input" type="number" id="calc-mant" oninput="calcGanancia()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Otros gastos ($)</label>
+                  <input class="form-input" type="number" id="calc-otros" oninput="calcGanancia()">
+                </div>
+              </div>
+              <div class="calc-result">
+                <div class="calc-row"><div class="calc-key">Total gastos</div><div class="calc-val danger" id="res-gastos">$0</div></div>
+                <div class="calc-row"><div class="calc-key">Ganancia neta</div><div class="calc-val success" id="res-neta">$0</div></div>
+                <div class="calc-row"><div class="calc-key">Margen neto</div><div class="calc-val accent" id="res-margen">0%</div></div>
+                <div class="calc-row"><div class="calc-key">Costo por km</div><div class="calc-val muted" id="res-km-calc">$0.00</div></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="net-card" id="mejor-semana"></div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Mejores zonas por pago/h</div></div>
+              <div class="card-body" id="mejores-zonas"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRACKER VIEW -->
+      <div class="view" id="view-tracker">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Registrar gasto</div></div>
+            <div class="card-body">
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label">Tipo</label>
+                  <select class="form-input" id="g-tipo">
+                    <option value="combustible">Combustible</option>
+                    <option value="mantenimiento">Mantenimiento</option>
+                    <option value="seguro">Seguro</option>
+                    <option value="datos_moviles">Datos móviles</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Monto ($)</label>
+                  <input class="form-input" type="number" id="g-monto" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fecha</label>
+                  <input class="form-input" type="date" id="g-fecha">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Km recorridos</label>
+                  <input class="form-input" type="number" id="g-km" placeholder="0">
+                </div>
+                <div class="form-group" style="grid-column:1/-1">
+                  <label class="form-label">Nota</label>
+                  <input class="form-input" type="text" id="g-nota" placeholder="Descripción opcional">
+                </div>
+              </div>
+              <div style="margin-top:14px">
+                <button class="btn btn-primary btn-full" onclick="guardarGasto()">Guardar gasto</button>
+              </div>
+              <div id="gasto-msg" style="margin-top:10px;font-size:12px;display:none"></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Resumen del mes</div></div>
+              <div class="card-body" id="tracker-resumen"></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Distribución de gastos</div></div>
+              <div class="card-body" id="tracker-dist"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-header"><div class="card-title">Historial de gastos</div></div>
+          <div class="card-body p0" id="lista-gastos"></div>
+        </div>
+      </div>
+
+      <!-- PERFIL VIEW -->
+      <div class="view" id="view-perfil">
+        <div style="max-width:480px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Datos personales</div></div>
+            <div class="card-body">
+              <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+                <div class="avatar-lg" id="perfil-avatar">--</div>
+                <div>
+                  <div id="perfil-nombre" style="font-size:16px;font-weight:600">--</div>
+                  <div id="perfil-desde" style="font-size:12px;color:var(--muted)"></div>
+                </div>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label">Nombre</label>
+                  <input class="form-input" type="text" id="p-nombre">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Apellido</label>
+                  <input class="form-input" type="text" id="p-apellido">
+                </div>
+                <div class="form-group" style="grid-column:1/-1">
+                  <label class="form-label">Vehículo</label>
+                  <input class="form-input" type="text" id="p-vehiculo" placeholder="Toyota Corolla 2020">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Consumo (km/l)</label>
+                  <input class="form-input" type="number" id="p-consumo" step="0.1">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Precio combustible ($/l)</label>
+                  <input class="form-input" type="number" id="p-precio" step="0.01">
+                </div>
+                <div class="form-group" style="grid-column:1/-1">
+                  <label class="form-label">Meta mensual ($)</label>
+                  <input class="form-input" type="number" id="p-meta">
+                </div>
+              </div>
+              <div style="margin-top:16px;display:flex;gap:10px">
+                <button class="btn btn-primary" onclick="guardarPerfil()">Guardar cambios</button>
+                <span id="perfil-msg" style="font-size:12px;line-height:36px;color:var(--success)"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BLOQUE -->
+<div id="modal-bloque" class="modal-overlay" style="display:none">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="card-title" id="modal-bloque-titulo">Nuevo bloque</div>
+      <button class="btn-icon" onclick="cerrarModal('modal-bloque')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="b-id">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input class="form-input" type="date" id="b-fecha">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Zona</label>
+          <input class="form-input" type="text" id="b-zona" placeholder="Centro, Norte...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora inicio</label>
+          <input class="form-input" type="time" id="b-inicio">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora fin</label>
+          <input class="form-input" type="time" id="b-fin">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pago ($)</label>
+          <input class="form-input" type="number" id="b-pago" placeholder="0.00" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Km recorridos</label>
+          <input class="form-input" type="number" id="b-km" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-input" id="b-estado">
+            <option value="pendiente">Pendiente</option>
+            <option value="completado">Completado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notas</label>
+          <input class="form-input" type="text" id="b-notas" placeholder="Opcional">
+        </div>
+      </div>
+      <div id="bloque-error" class="auth-error" style="display:none;margin-top:10px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-bloque')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarBloque()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
